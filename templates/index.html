@@ -1,0 +1,816 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Word Predictor AI</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: #0A0A0A;
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+        color: #F8FAFC;
+      }
+
+      .container {
+        background: linear-gradient(135deg, #111111 0%, #0F0F0F 100%);
+        border: 1px solid #2A2A2A;
+        border-radius: 20px;
+        box-shadow: 0 20px 60px rgba(239, 68, 68, 0.1), 0 0 40px rgba(239, 68, 68, 0.05);
+        padding: 40px;
+        max-width: 900px;
+        width: 100%;
+        backdrop-filter: blur(10px);
+      }
+
+      .header {
+        text-align: center;
+        margin-bottom: 40px;
+        border-bottom: 1px solid #2A2A2A;
+        padding-bottom: 30px;
+      }
+
+      .header h1 {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        font-size: 32px;
+        color: #F8FAFC;
+        margin-bottom: 8px;
+        background: linear-gradient(135deg, #EF4444, #F97316);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      .brain-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 32px;
+        background: linear-gradient(135deg, #EF4444, #F97316);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      .header p {
+        color: #A1A1AA;
+        font-size: 16px;
+      }
+
+      .input-section {
+        margin-bottom: 30px;
+      }
+
+      .input-box {
+        position: relative;
+        margin-bottom: 15px;
+      }
+
+      .input-box textarea {
+        width: 100%;
+        padding: 15px;
+        border: 2px solid #2A2A2A;
+        border-radius: 12px;
+        font-size: 16px;
+        font-family: inherit;
+        resize: vertical;
+        min-height: 100px;
+        transition: all 0.3s ease;
+        background: #111111;
+        color: #F8FAFC;
+      }
+
+      .input-box textarea:focus {
+        outline: none;
+        border-color: #EF4444;
+        box-shadow: 
+          0 0 20px rgba(239, 68, 68, 0.3),
+          inset 0 0 20px rgba(239, 68, 68, 0.05);
+      }
+
+      .input-box textarea::placeholder {
+        color: #71717A;
+      }
+
+      .button-group {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+      }
+
+      .btn-clear {
+        background: linear-gradient(135deg, #EF4444, #F97316);
+        color: white;
+        border: 1px solid #EF4444;
+        padding: 10px 20px;
+        border-radius: 10px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        transition: all 0.3s ease;
+      }
+
+      .btn-clear:hover {
+        box-shadow: 0 0 20px rgba(239, 68, 68, 0.5);
+        transform: translateY(-2px);
+      }
+
+      .btn-clear:active {
+        transform: translateY(0);
+      }
+
+      .predictions-section {
+        margin-bottom: 30px;
+      }
+
+      .section-title {
+        font-size: 14px;
+        font-weight: 700;
+        color: #F8FAFC;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 15px;
+        color: #A1A1AA;
+      }
+
+      .predictions-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-bottom: 10px;
+        min-height: 120px;
+      }
+
+      .prediction-card {
+        background: linear-gradient(135deg, #18181B 0%, #16161A 100%);
+        border: 2px solid #2A2A2A;
+        border-radius: 12px;
+        padding: 20px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        transform: translateY(0);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+      }
+
+      .prediction-card:hover {
+        transform: translateY(-4px) scale(1.02);
+        border-color: #EF4444;
+        box-shadow: 0 8px 30px rgba(239, 68, 68, 0.3);
+      }
+
+      .prediction-card.dark {
+        border-color: #EF4444;
+        box-shadow: 0 0 20px rgba(239, 68, 68, 0.3);
+      }
+
+      .prediction-card.light {
+        background: linear-gradient(135deg, #18181B 0%, #16161A 100%);
+        border-color: #2A2A2A;
+      }
+
+      .prediction-card.light:hover {
+        border-color: #EF4444;
+        box-shadow: 0 0 20px rgba(239, 68, 68, 0.3);
+      }
+
+      .prediction-word {
+        font-size: 24px;
+        font-weight: 700;
+        color: #EF4444;
+        margin-bottom: 8px;
+      }
+
+      .prediction-confidence {
+        font-size: 16px;
+        font-weight: 600;
+        color: #A1A1AA;
+      }
+
+      .empty-state {
+        text-align: center;
+        color: #71717A;
+        font-size: 14px;
+        padding: 30px;
+        background: #111111;
+        border-radius: 12px;
+        border: 1px solid #2A2A2A;
+      }
+
+      .keyboard-section {
+        background: linear-gradient(135deg, #0F0F0F 0%, #0A0A0A 100%);
+        padding: 8px;
+        border-radius: 16px;
+        border: 1px solid #2A2A2A;
+        box-shadow: 0 -10px 30px rgba(239, 68, 68, 0.05);
+      }
+
+      .keyboard-mode {
+        transition: all 0.3s ease;
+      }
+
+      .keyboard-row {
+        display: flex;
+        justify-content: center;
+        gap: 5px;
+        margin-bottom: 5px;
+        flex-wrap: wrap;
+      }
+
+      .key {
+        flex: 1;
+        min-width: 32px;
+        height: 45px;
+        background: linear-gradient(135deg, #1A1A1A 0%, #151515 100%);
+        border: 1px solid #2A2A2A;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: 600;
+        color: #F8FAFC;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+        user-select: none;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+        letter-spacing: 0.5px;
+      }
+
+      .key:hover {
+        background: linear-gradient(135deg, #2A2A2A 0%, #1F1F1F 100%);
+        border-color: #EF4444;
+        transform: translateY(-2px);
+        box-shadow: 
+          0 4px 12px rgba(0, 0, 0, 0.6),
+          0 0 15px rgba(239, 68, 68, 0.2);
+      }
+
+      .key:active {
+        transform: translateY(1px);
+        background: linear-gradient(135deg, #151515 0%, #0F0F0F 100%);
+        box-shadow: 
+          0 1px 4px rgba(0, 0, 0, 0.6),
+          0 0 10px rgba(239, 68, 68, 0.15);
+      }
+
+      .key.space {
+        flex: 4;
+        min-width: 200px;
+        font-size: 14px;
+        border-color: #EF4444;
+        background: linear-gradient(135deg, #1A1A1A 0%, #151515 100%);
+      }
+
+      .key.space:hover {
+        box-shadow: 
+          0 4px 12px rgba(0, 0, 0, 0.6),
+          0 0 20px rgba(239, 68, 68, 0.3);
+      }
+
+      .key.backspace {
+        flex: 1;
+        min-width: 45px;
+        background: linear-gradient(135deg, #7F1D1D 0%, #5F1E1E 100%);
+        border-color: #EF4444;
+        color: #FF5C5C;
+      }
+
+      .key.backspace:hover {
+        background: linear-gradient(135deg, #A02020 0%, #7F2020 100%);
+        box-shadow: 
+          0 4px 12px rgba(0, 0, 0, 0.6),
+          0 0 20px rgba(239, 68, 68, 0.4);
+      }
+
+      .key.backspace:active {
+        background: linear-gradient(135deg, #5F1E1E 0%, #4A1515 100%);
+      }
+
+      .key.enter {
+        flex: 1.5;
+        min-width: 60px;
+        background: linear-gradient(135deg, #7F3030 0%, #5F2020 100%);
+        border-color: #EF4444;
+        font-size: 14px;
+        color: #FF5C5C;
+      }
+
+      .key.enter:hover {
+        background: linear-gradient(135deg, #A04040 0%, #7F3030 100%);
+        box-shadow: 
+          0 4px 12px rgba(0, 0, 0, 0.6),
+          0 0 20px rgba(239, 68, 68, 0.4);
+      }
+
+      .key.enter:active {
+        background: linear-gradient(135deg, #5F2020 0%, #451515 100%);
+      }
+
+      .key.shift {
+        flex: 1;
+        min-width: 45px;
+        background: linear-gradient(135deg, #1A2A4A 0%, #152040 100%);
+        border-color: #2A5A8A;
+        font-size: 14px;
+        color: #A1C5FF;
+      }
+
+      .key.shift:hover {
+        background: linear-gradient(135deg, #2A4A6A 0%, #1F3050 100%);
+        border-color: #3A7AC0;
+        box-shadow: 
+          0 4px 12px rgba(0, 0, 0, 0.6),
+          0 0 15px rgba(58, 122, 192, 0.3);
+      }
+
+      .key.shift:active {
+        background: linear-gradient(135deg, #152040 0%, #0F1830 100%);
+      }
+
+      .key.shift.active {
+        background: linear-gradient(135deg, #2A5A3A 0%, #1A4A2A 100%);
+        border-color: #3A8A4A;
+        box-shadow: 
+          0 0 20px rgba(90, 223, 90, 0.3),
+          0 0 10px rgba(90, 223, 90, 0.2);
+        color: #5ADF5A;
+      }
+
+      .key.tab-icon {
+        flex: 1;
+        min-width: 45px;
+        font-size: 12px;
+      }
+
+      @media (max-width: 768px) {
+        .container {
+          padding: 20px;
+        }
+
+        .header h1 {
+          font-size: 24px;
+        }
+
+        .predictions-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .key {
+          min-width: 0;
+          height: 40px;
+          font-size: 14px;
+          padding: 0 2px;
+        }
+
+        .key.space {
+          min-width: 0;
+          flex: 3;
+        }
+
+        .key.shift,
+        .key.backspace,
+        .key.enter,
+        .key.tab-icon {
+          min-width: 0;
+          flex: 1.4;
+          font-size: 12px;
+        }
+
+        .keyboard-row {
+          gap: 4px;
+          margin-bottom: 4px;
+          flex-wrap: nowrap;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>
+          <span class="brain-icon">🧠</span>
+          Word Predictor AI
+        </h1>
+        <p>Predict the next word using LSTM model</p>
+      </div>
+
+      <div class="input-section">
+        <div class="input-box">
+          <textarea id="textInput" placeholder="Start typing..."></textarea>
+        </div>
+        <div class="button-group">
+          <button class="btn-clear" onclick="clearText()">🗑️ Clear</button>
+        </div>
+      </div>
+
+      <div class="predictions-section">
+        <div class="section-title">Top 3 Predictions</div>
+        <div class="predictions-grid" id="predictionsGrid">
+          <div class="empty-state">Start typing to see predictions...</div>
+        </div>
+      </div>
+
+      <div class="keyboard-section">
+        <!-- ABC KEYBOARD (DEFAULT) -->
+        <div id="keyboardABC" class="keyboard-mode">
+          <!-- Numbers Row -->
+          <div class="keyboard-row">
+            <div class="key" onclick="addChar('1')">1</div>
+            <div class="key" onclick="addChar('2')">2</div>
+            <div class="key" onclick="addChar('3')">3</div>
+            <div class="key" onclick="addChar('4')">4</div>
+            <div class="key" onclick="addChar('5')">5</div>
+            <div class="key" onclick="addChar('6')">6</div>
+            <div class="key" onclick="addChar('7')">7</div>
+            <div class="key" onclick="addChar('8')">8</div>
+            <div class="key" onclick="addChar('9')">9</div>
+            <div class="key" onclick="addChar('0')">0</div>
+          </div>
+
+          <!-- Row 1: QWERTYUIOP -->
+          <div class="keyboard-row">
+            <div class="key" onclick="addChar('Q')">Q</div>
+            <div class="key" onclick="addChar('W')">W</div>
+            <div class="key" onclick="addChar('E')">E</div>
+            <div class="key" onclick="addChar('R')">R</div>
+            <div class="key" onclick="addChar('T')">T</div>
+            <div class="key" onclick="addChar('Y')">Y</div>
+            <div class="key" onclick="addChar('U')">U</div>
+            <div class="key" onclick="addChar('I')">I</div>
+            <div class="key" onclick="addChar('O')">O</div>
+            <div class="key" onclick="addChar('P')">P</div>
+          </div>
+
+          <!-- Row 2: ASDFGHJKL -->
+          <div class="keyboard-row">
+            <div class="key" onclick="addChar('A')">A</div>
+            <div class="key" onclick="addChar('S')">S</div>
+            <div class="key" onclick="addChar('D')">D</div>
+            <div class="key" onclick="addChar('F')">F</div>
+            <div class="key" onclick="addChar('G')">G</div>
+            <div class="key" onclick="addChar('H')">H</div>
+            <div class="key" onclick="addChar('J')">J</div>
+            <div class="key" onclick="addChar('K')">K</div>
+            <div class="key" onclick="addChar('L')">L</div>
+          </div>
+
+          <!-- Row 3: ZXCVBNM + Backspace -->
+          <div class="keyboard-row">
+            <div class="key shift" id="shiftKey" onclick="toggleShift()">⬆ Shift</div>
+            <div class="key" onclick="addChar('Z')">Z</div>
+            <div class="key" onclick="addChar('X')">X</div>
+            <div class="key" onclick="addChar('C')">C</div>
+            <div class="key" onclick="addChar('V')">V</div>
+            <div class="key" onclick="addChar('B')">B</div>
+            <div class="key" onclick="addChar('N')">N</div>
+            <div class="key" onclick="addChar('M')">M</div>
+            <div class="key backspace" onclick="backspace()">⌫</div>
+          </div>
+
+          <!-- Row 4: Space + Punctuation + Enter -->
+          <div class="keyboard-row">
+            <div class="key tab-icon" onclick="switchKeyboardMode(123)" id="numIcon">123</div>
+            <div class="key" onclick="addChar('.')">.</div>
+            <div class="key space" onclick="addChar(' ')">space</div>
+            <div class="key" onclick="addChar(',')">,</div>
+            <div class="key enter" onclick="addNewline()">⏎ Enter</div>
+          </div>
+        </div>
+
+        <!-- 123 KEYBOARD (NUMBERS & SYMBOLS) -->
+        <div id="keyboard123" class="keyboard-mode" style="display: none;">
+          <!-- Row 1: Numbers 1-0 -->
+          <div class="keyboard-row">
+            <div class="key" onclick="addChar('1')">1</div>
+            <div class="key" onclick="addChar('2')">2</div>
+            <div class="key" onclick="addChar('3')">3</div>
+            <div class="key" onclick="addChar('4')">4</div>
+            <div class="key" onclick="addChar('5')">5</div>
+            <div class="key" onclick="addChar('6')">6</div>
+            <div class="key" onclick="addChar('7')">7</div>
+            <div class="key" onclick="addChar('8')">8</div>
+            <div class="key" onclick="addChar('9')">9</div>
+            <div class="key" onclick="addChar('0')">0</div>
+          </div>
+
+          <!-- Row 2: Symbols -->
+          <div class="keyboard-row">
+            <div class="key" onclick="addChar('-')">-</div>
+            <div class="key" onclick="addChar('/')">/</div>
+            <div class="key" onclick="addChar(':')">:</div>
+            <div class="key" onclick="addChar(';')">;</div>
+            <div class="key" onclick="addChar('(')">(</div>
+            <div class="key" onclick="addChar(')')">)</div>
+            <div class="key" onclick="addChar('₹')">₹</div>
+            <div class="key" onclick="addChar('&amp;')">&amp;</div>
+            <div class="key" onclick="addChar('@')">@</div>
+            <div class="key" onclick="addChar('&quot;')">&quot;</div>
+          </div>
+
+          <!-- Row 3: More Symbols -->
+          <div class="keyboard-row">
+            <div class="key tab-icon" onclick="switchKeyboardMode('SPECIAL')">●+=</div>
+            <div class="key" onclick="addChar('.')" style="flex: 1.5">.</div>
+            <div class="key" onclick="addChar(',')">,</div>
+            <div class="key" onclick="addChar('?')">?</div>
+            <div class="key" onclick="addChar('!')">!</div>
+            <div class="key" onclick="addChar('\'')">'</div>
+            <div class="key backspace" onclick="backspace()">⌫</div>
+          </div>
+
+          <!-- Row 4: Switch buttons -->
+          <div class="keyboard-row">
+            <div class="key tab-icon" onclick="switchKeyboardMode('ABC')">ABC</div>
+            <div class="key" onclick="addChar('.')" style="flex: 1.5">.</div>
+            <div class="key" onclick="addChar('/')">/</div>
+            <div class="key space" onclick="addChar(' ')">space</div>
+            <div class="key enter" onclick="addNewline()">⏎ Enter</div>
+          </div>
+        </div>
+
+        <!-- #+= KEYBOARD (SPECIAL SYMBOLS) -->
+        <div id="keyboardSpecial" class="keyboard-mode" style="display: none;">
+          <!-- Row 1: Brackets & Special -->
+          <div class="keyboard-row">
+            <div class="key" onclick="addChar('[')"> [ </div>
+            <div class="key" onclick="addChar(']')"> ] </div>
+            <div class="key" onclick="addChar('{')"> { </div>
+            <div class="key" onclick="addChar('}')"> } </div>
+            <div class="key" onclick="addChar('#')"> # </div>
+            <div class="key" onclick="addChar('%')"> % </div>
+            <div class="key" onclick="addChar('^')"> ^ </div>
+            <div class="key" onclick="addChar('*')"> * </div>
+            <div class="key" onclick="addChar('+')"> + </div>
+            <div class="key" onclick="addChar('=')"> = </div>
+          </div>
+
+          <!-- Row 2: More Special Chars -->
+          <div class="keyboard-row">
+            <div class="key" onclick="addChar('\\')">\</div>
+            <div class="key" onclick="addChar('|')"> | </div>
+            <div class="key" onclick="addChar('~')"> ~ </div>
+            <div class="key" onclick="addChar('&lt;')">&lt;</div>
+            <div class="key" onclick="addChar('&gt;')">&gt;</div>
+            <div class="key" onclick="addChar('$')"> $ </div>
+            <div class="key" onclick="addChar('£')"> £ </div>
+            <div class="key" onclick="addChar('€')"> € </div>
+            <div class="key" onclick="addChar('`')"> ` </div>
+            <div class="key" onclick="addChar('¥')"> ¥ </div>
+          </div>
+
+          <!-- Row 3: Backspace & More -->
+          <div class="keyboard-row">
+            <div class="key" onclick="addChar('.')" style="flex: 1.5">.</div>
+            <div class="key" onclick="addChar(',')">,</div>
+            <div class="key" onclick="addChar('?')">?</div>
+            <div class="key" onclick="addChar('!')">!</div>
+            <div class="key" onclick="addChar('\'')">'</div>
+            <div class="key" onclick="addChar('&quot;')">&quot;</div>
+            <div class="key backspace" onclick="backspace()">⌫</div>
+          </div>
+
+          <!-- Row 4: Switch buttons -->
+          <div class="keyboard-row">
+            <div class="key tab-icon" onclick="switchKeyboardMode('ABC')">ABC</div>
+            <div class="key tab-icon" onclick="switchKeyboardMode(123)">123</div>
+            <div class="key space" onclick="addChar(' ')" style="flex: 2">space</div>
+            <div class="key enter" onclick="addNewline()">⏎ Enter</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const textInput = document.getElementById("textInput");
+      const predictionsGrid = document.getElementById("predictionsGrid");
+      const DEBOUNCE_MS = 300;
+      const DOUBLE_TAP_DELAY = 300;
+      let debounceTimer;
+      let requestSeq = 0; // used to ignore out-of-date responses
+      let isShiftActive = false;
+      let isCapsLockActive = false;
+      let lastShiftTap = 0;
+      let currentKeyboardMode = "ABC"; // 'ABC', '123', or 'SPECIAL'
+
+      function showMessage(message) {
+        predictionsGrid.innerHTML = "";
+        const div = document.createElement("div");
+        div.className = "empty-state";
+        div.textContent = message;
+        predictionsGrid.appendChild(div);
+      }
+
+      // Native typing, pasting, Backspace, Ctrl+Backspace etc. all land here
+      textInput.addEventListener("input", schedulePredictions);
+
+      function schedulePredictions() {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(updatePredictions, DEBOUNCE_MS);
+      }
+
+      async function updatePredictions() {
+        const text = textInput.value.trim();
+        const mySeq = ++requestSeq;
+
+        if (!text) {
+          showMessage("Start typing to see predictions...");
+          return;
+        }
+
+        try {
+          const response = await fetch("/api/predict", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ text: text }),
+          });
+          if (!response.ok) throw new Error("HTTP " + response.status);
+          const data = await response.json();
+          if (mySeq !== requestSeq) return; // a newer request has been sent
+          displayPredictions(data.predictions || []);
+        } catch (error) {
+          if (mySeq !== requestSeq) return;
+          console.error("Error fetching predictions:", error);
+          showMessage("Error loading predictions");
+        }
+      }
+
+      function displayPredictions(predictions) {
+        if (predictions.length === 0) {
+          showMessage("No predictions available");
+          return;
+        }
+
+        predictionsGrid.innerHTML = "";
+        predictions.forEach((pred, index) => {
+          // Build with DOM APIs + textContent so words like "don't" are safe
+          const card = document.createElement("div");
+          card.className = "prediction-card " + (index === 0 ? "dark" : "light");
+          card.addEventListener("click", () => insertWord(pred.word));
+
+          const word = document.createElement("div");
+          word.className = "prediction-word";
+          word.textContent = pred.word;
+
+          const conf = document.createElement("div");
+          conf.className = "prediction-confidence";
+          conf.textContent = pred.confidence + "%";
+
+          card.append(word, conf);
+          predictionsGrid.appendChild(card);
+        });
+      }
+
+      function addChar(char) {
+        const start = textInput.selectionStart;
+        const end = textInput.selectionEnd;
+        const text = textInput.value;
+
+        // Handle letter case based on shift or caps lock state
+        if (/^[a-z]$/i.test(char)) {
+          if (isCapsLockActive) {
+            char = char.toUpperCase();
+          } else if (isShiftActive) {
+            char = char.toUpperCase();
+            deactivateShift();
+          } else {
+            char = char.toLowerCase();
+          }
+        }
+
+        textInput.value = text.substring(0, start) + char + text.substring(end);
+        textInput.selectionStart = textInput.selectionEnd = start + char.length;
+        textInput.focus();
+        schedulePredictions();
+      }
+
+      function insertWord(word) {
+        const text = textInput.value.replace(/\s+$/, "");
+        if (!text) return;
+        textInput.value = text + " " + word + " ";
+        textInput.selectionStart = textInput.selectionEnd = textInput.value.length;
+        textInput.focus();
+        clearTimeout(debounceTimer);
+        updatePredictions();
+      }
+
+      function backspace() {
+        const start = textInput.selectionStart;
+        const end = textInput.selectionEnd;
+        const text = textInput.value;
+
+        if (start === end && start > 0) {
+          textInput.value = text.substring(0, start - 1) + text.substring(start);
+          textInput.selectionStart = textInput.selectionEnd = start - 1;
+        } else if (start !== end) {
+          textInput.value = text.substring(0, start) + text.substring(end);
+          textInput.selectionStart = textInput.selectionEnd = start;
+        }
+
+        textInput.focus();
+        schedulePredictions();
+      }
+
+      function addNewline() {
+        addChar("\n");
+      }
+
+      function clearText() {
+        clearTimeout(debounceTimer);
+        requestSeq++; // drop any response still in flight
+        textInput.value = "";
+        showMessage("Start typing to see predictions...");
+        textInput.focus();
+      }
+
+      // On-screen Shift: tap = next letter uppercase, double-tap = caps lock,
+      // tap while caps lock is on = caps lock off
+      function toggleShift() {
+        const now = Date.now();
+        if (now - lastShiftTap < DOUBLE_TAP_DELAY) {
+          isCapsLockActive = true;
+          isShiftActive = false;
+          lastShiftTap = 0;
+        } else {
+          if (isCapsLockActive) {
+            isCapsLockActive = false;
+            isShiftActive = false;
+          } else {
+            isShiftActive = !isShiftActive;
+          }
+          lastShiftTap = now;
+        }
+        updateShiftKeyAppearance();
+      }
+
+      function deactivateShift() {
+        isShiftActive = false;
+        updateShiftKeyAppearance();
+      }
+
+      function updateShiftKeyAppearance() {
+        const shiftBtn = document.getElementById("shiftKey");
+        const upper = isCapsLockActive || isShiftActive;
+
+        shiftBtn.classList.toggle("active", upper);
+        if (isCapsLockActive) {
+          shiftBtn.style.background = "linear-gradient(180deg, #00ff00 0%, #00cc00 100%)";
+          shiftBtn.style.color = "black";
+          shiftBtn.style.borderColor = "#009900";
+          shiftBtn.textContent = "⬆ CAPS";
+        } else if (isShiftActive) {
+          shiftBtn.style.background = "linear-gradient(180deg, #5adf5a 0%, #3abd3a 100%)";
+          shiftBtn.style.color = "white";
+          shiftBtn.style.borderColor = "#2a8d2a";
+          shiftBtn.textContent = "⬆ Shift";
+        } else {
+          shiftBtn.style.background = "";
+          shiftBtn.style.color = "";
+          shiftBtn.style.borderColor = "";
+          shiftBtn.textContent = "⬆ Shift";
+        }
+
+        // Letter keys show the case they will type
+        document.querySelectorAll("#keyboardABC .key").forEach((key) => {
+          if (/^[a-z]$/i.test(key.textContent)) {
+            key.textContent = upper ? key.textContent.toUpperCase() : key.textContent.toLowerCase();
+          }
+        });
+      }
+
+      function switchKeyboardMode(mode) {
+        const keyboards = {
+          ABC: document.getElementById("keyboardABC"),
+          123: document.getElementById("keyboard123"),
+          SPECIAL: document.getElementById("keyboardSpecial"),
+        };
+        Object.values(keyboards).forEach((kb) => (kb.style.display = "none"));
+
+        if (mode === 123 || mode === "123") mode = "123";
+        else if (mode === "#+=") mode = "SPECIAL";
+        if (!keyboards[mode]) mode = "ABC";
+
+        keyboards[mode].style.display = "block";
+        currentKeyboardMode = mode;
+        deactivateShift();
+      }
+
+      updateShiftKeyAppearance(); // start with lowercase letter labels
+    </script>
+  </body>
+</html>
